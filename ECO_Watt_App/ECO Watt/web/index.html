@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#151914">
+  <title>Echo Watt</title>
+
+  <!-- PWA: manifest & icon aplikasi (agar bisa di-install ke layar HP/desktop) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Echo Watt">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10130f;
+      --panel: #1a1f18;
+      --panel-2: #222820;
+      --line: #343d31;
+      --text: #f0f1e9;
+      --muted: #9ca694;
+      --accent: #d99a38;
+      --green: #70b878;
+      --red: #d16658;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .35);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 50% -10%, #2b3427 0, transparent 38%),
+        linear-gradient(180deg, #141813, var(--bg));
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .48;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top)) 16px
+               max(28px, env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(24px, 5vw, 34px);
+      letter-spacing: .06em;
+    }
+
+    .brand h1 span { color: var(--accent); }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 14px rgba(209, 102, 88, .65);
+    }
+
+    .status-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 14px rgba(112, 184, 120, .7);
+    }
+
+    .connect-btn {
+      padding: 11px 15px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #17130c;
+      font-weight: 800;
+    }
+
+    .hero {
+      background: linear-gradient(145deg, #252c22, #171b16);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .hero-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+    }
+
+    .connection-text {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .device-info {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .security-badge {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .hero-note {
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 13px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 22px 2px 11px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .relay-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .relay-card {
+      position: relative;
+      min-height: 154px;
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      transition: border-color .2s, transform .2s, background .2s;
+    }
+
+    .relay-card.active {
+      border-color: rgba(112, 184, 120, .72);
+      background: linear-gradient(145deg, #223126, #192019);
+    }
+
+    .relay-card.master {
+      grid-column: 1 / -1;
+      min-height: 136px;
+      background: linear-gradient(145deg, #30281a, var(--panel));
+      border-color: rgba(217, 154, 56, .35);
+    }
+
+    .relay-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .relay-number {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .11em;
+    }
+
+    .relay-name {
+      display: block;
+      margin-top: 5px;
+      font-size: 17px;
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .relay-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .relay-state::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    .relay-card.active .relay-state {
+      color: var(--green);
+    }
+
+    .relay-card.active .relay-state::before {
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(112, 184, 120, .65);
+    }
+
+    .switch {
+      position: relative;
+      width: 54px;
+      height: 32px;
+      border-radius: 999px;
+      background: #4a5146;
+      border: 1px solid #5e6759;
+      transition: .22s;
+      flex: 0 0 auto;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e8e9df;
+      box-shadow: 0 2px 7px rgba(0,0,0,.32);
+      transition: transform .22s;
+    }
+
+    .switch.on {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .switch.on::after { transform: translateX(22px); }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+    }
+
+    .action-btn {
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      font-weight: 800;
+    }
+
+    .action-btn.on {
+      background: rgba(112, 184, 120, .14);
+      border-color: rgba(112, 184, 120, .55);
+      color: #a8dda9;
+    }
+
+    .action-btn.off {
+      background: rgba(209, 102, 88, .13);
+      border-color: rgba(209, 102, 88, .52);
+      color: #f0a296;
+    }
+
+    details {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px;
+      font-weight: 800;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    .settings-body {
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-top: 13px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .field input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 11px 12px;
+      background: #121611;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field input:focus { border-color: var(--accent); }
+
+    .save-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #17130c;
+      font-weight: 850;
+    }
+
+    .history {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .history-head strong { font-size: 14px; }
+
+    .clear-btn {
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .history-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .history-list li {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(52, 61, 49, .58);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .history-list li:last-child { border-bottom: 0; }
+    .history-list time { color: var(--accent); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      transform: translate(-50%, 20px);
+      width: min(calc(100% - 32px), 520px);
+      padding: 13px 15px;
+      border-radius: 13px;
+      background: #edf0e6;
+      color: #171a15;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: .25s;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .unsupported {
+      display: none;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      border-radius: 13px;
+      border: 1px solid rgba(217, 154, 56, .45);
+      background: rgba(217, 154, 56, .1);
+      color: #efc27a;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .unsupported.show { display: block; }
+
+
+    .timer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .timer-card {
+      padding: 15px;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    .timer-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .timer-card small {
+      display: block;
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .timer-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .timer-controls select,
+    .timer-controls input,
+    .settings-select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 10px 11px;
+      background: #121611;
+      color: var(--text);
+      outline: none;
+    }
+
+    .timer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .timer-btn {
+      padding: 10px;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .timer-btn.start {
+      border-color: rgba(112, 184, 120, .5);
+      color: #a8dda9;
+    }
+
+    .timer-btn.cancel {
+      border-color: rgba(209, 102, 88, .45);
+      color: #f0a296;
+    }
+
+    .timer-btn:disabled { opacity: .45; }
+
+    .settings-block {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .settings-block:first-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .settings-block h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+    }
+
+    .settings-help {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .feature-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #151914;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .feature-row strong { color: var(--text); }
+
+    .countdown-alert {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: rgba(217, 154, 56, .11);
+      border: 1px solid rgba(217, 154, 56, .38);
+      color: #efc27a;
+      font-size: 12px;
+    }
+
+    .countdown-alert.show { display: block; }
+
+    @media (max-width: 520px) {
+      .app { padding-left: 12px; padding-right: 12px; }
+      .topbar { align-items: flex-start; }
+      .connection { flex-direction: column; align-items: flex-end; gap: 7px; }
+      .relay-grid { grid-template-columns: 1fr; }
+      .relay-card.master { grid-column: auto; }
+      .timer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>ECHO<span>·</span>WATT</h1>
+        <p>Smart socket offline</p>
+      </div>
+
+      <div class="connection">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusMini" style="font-size:12px;color:var(--muted)">Terputus</span>
+        </div>
+        <button class="connect-btn" id="connectBtn">Hubungkan</button>
+      </div>
+    </header>
+
+    <div class="unsupported" id="unsupportedNotice">
+      Mode browser membutuhkan Chrome atau Edge yang mendukung Web Bluetooth.
+      Saat halaman ini dimasukkan ke APK, koneksi akan ditangani langsung oleh Android.
+    </div>
+
+    <section class="hero">
+      <div class="hero-row">
+        <div>
+          <p class="eyebrow">Status perangkat</p>
+          <p class="connection-text" id="connectionText">Belum terhubung</p>
+          <p class="device-info" id="deviceInfo">Perangkat: Echo_Watt</p>
+        </div>
+        <span class="security-badge">1 USER • BLE • OFFLINE</span>
+      </div>
+      <div class="hero-note" id="safetyNote">
+        Mode koneksi dan waktu auto-OFF tersimpan langsung di ESP32. Hanya satu
+        HP yang dapat mengontrol Echo Watt pada satu waktu.
+      </div>
+      <div class="countdown-alert" id="disconnectCountdown"></div>
+    </section>
+
+    <div class="section-title">
+      <h2>Kontrol relay</h2>
+      <span id="relaySummary">0 dari 4 aktif</span>
+    </div>
+
+    <section class="relay-grid" id="relayGrid">
+      <article class="relay-card" data-relay="1">
+        <div class="relay-head">
+          <div>
+            <span class="relay-number">Relay 1</span>
+            <strong class="relay-name" id="relayName1">Stopkontak 1</strong>
+          </div>
+          <button class="switch relay-toggle" data-relay="1" aria-label="Ubah Relay 1" disabled></button>
+        </div>
+        <span class="relay-state">Mati</span>
+      </article>
+
+      <article class="relay-card" data-relay="2">
+        <div class="relay-head">
+          <div>
+            <span class="relay-number">Relay 2</span>
+            <strong class="relay-name" id="relayName2">Stopkontak 2</strong>
+          </div>
+          <button class="switch relay-toggle" data-relay="2" aria-label="Ubah Relay 2" disabled></button>
+        </div>
+        <span class="relay-state">Mati</span>
+      </article>
+
+      <article class="relay-card" data-relay="3">
+        <div class="relay-head">
+          <div>
+            <span class="relay-number">Relay 3</span>
+            <strong class="relay-name" id="relayName3">Stopkontak 3</strong>
+          </div>
+          <button class="switch relay-toggle" data-relay="3" aria-label="Ubah Relay 3" disabled></button>
+        </div>
+        <span class="relay-state">Mati</span>
+      </article>
+
+      <article class="relay-card master" data-relay="4">
+        <div class="relay-head">
+          <div>
+            <span class="relay-number">Relay 4</span>
+            <strong class="relay-name" id="relayName4">Master Power</strong>
+          </div>
+          <button class="switch relay-toggle" data-relay="4" aria-label="Ubah Relay 4" disabled></button>
+        </div>
+        <span class="relay-state">Mati</span>
+      </article>
+    </section>
+
+    <div class="section-title">
+      <h2>Kontrol cepat</h2>
+    </div>
+
+    <section class="quick-actions">
+      <button class="action-btn on" id="allOnBtn" disabled>Nyalakan Semua</button>
+      <button class="action-btn off" id="allOffBtn" disabled>Matikan Semua</button>
+    </section>
+
+    <div class="section-title">
+      <h2>Countdown timer</h2>
+      <span>Berjalan di ESP32</span>
+    </div>
+
+    <section class="timer-grid">
+      <article class="timer-card" data-timer-relay="1">
+        <strong id="timerName1">Stopkontak 1</strong>
+        <small id="timerStatus1">Timer tidak aktif</small>
+        <div class="timer-controls">
+          <select id="timerPreset1">
+            <option value="600">10 menit</option>
+            <option value="900" selected>15 menit</option>
+            <option value="1800">30 menit</option>
+            <option value="3600">1 jam</option>
+            <option value="custom">Waktu khusus</option>
+          </select>
+          <input id="timerCustom1" type="number" min="1" max="1440" value="15" hidden aria-label="Menit khusus Relay 1">
+        </div>
+        <div class="timer-actions">
+          <button class="timer-btn start timer-start" data-relay="1" disabled>Mulai</button>
+          <button class="timer-btn cancel timer-cancel" data-relay="1" disabled>Batalkan</button>
+        </div>
+      </article>
+
+      <article class="timer-card" data-timer-relay="2">
+        <strong id="timerName2">Stopkontak 2</strong>
+        <small id="timerStatus2">Timer tidak aktif</small>
+        <div class="timer-controls">
+          <select id="timerPreset2">
+            <option value="600">10 menit</option>
+            <option value="900" selected>15 menit</option>
+            <option value="1800">30 menit</option>
+            <option value="3600">1 jam</option>
+            <option value="custom">Waktu khusus</option>
+          </select>
+          <input id="timerCustom2" type="number" min="1" max="1440" value="15" hidden aria-label="Menit khusus Relay 2">
+        </div>
+        <div class="timer-actions">
+          <button class="timer-btn start timer-start" data-relay="2" disabled>Mulai</button>
+          <button class="timer-btn cancel timer-cancel" data-relay="2" disabled>Batalkan</button>
+        </div>
+      </article>
+
+      <article class="timer-card" data-timer-relay="3">
+        <strong id="timerName3">Stopkontak 3</strong>
+        <small id="timerStatus3">Timer tidak aktif</small>
+        <div class="timer-controls">
+          <select id="timerPreset3">
+            <option value="600">10 menit</option>
+            <option value="900" selected>15 menit</option>
+            <option value="1800">30 menit</option>
+            <option value="3600">1 jam</option>
+            <option value="custom">Waktu khusus</option>
+          </select>
+          <input id="timerCustom3" type="number" min="1" max="1440" value="15" hidden aria-label="Menit khusus Relay 3">
+        </div>
+        <div class="timer-actions">
+          <button class="timer-btn start timer-start" data-relay="3" disabled>Mulai</button>
+          <button class="timer-btn cancel timer-cancel" data-relay="3" disabled>Batalkan</button>
+        </div>
+      </article>
+
+      <article class="timer-card" data-timer-relay="4">
+        <strong id="timerName4">Master Power</strong>
+        <small id="timerStatus4">Timer tidak aktif</small>
+        <div class="timer-controls">
+          <select id="timerPreset4">
+            <option value="600">10 menit</option>
+            <option value="900" selected>15 menit</option>
+            <option value="1800">30 menit</option>
+            <option value="3600">1 jam</option>
+            <option value="custom">Waktu khusus</option>
+          </select>
+          <input id="timerCustom4" type="number" min="1" max="1440" value="15" hidden aria-label="Menit khusus Relay 4">
+        </div>
+        <div class="timer-actions">
+          <button class="timer-btn start timer-start" data-relay="4" disabled>Mulai</button>
+          <button class="timer-btn cancel timer-cancel" data-relay="4" disabled>Batalkan</button>
+        </div>
+      </article>
+    </section>
+
+    <div class="section-title">
+      <h2>Pengaturan lokal</h2>
+      <span>Tersimpan di HP</span>
+    </div>
+
+    <details open>
+      <summary>Pengaturan perangkat dan nama</summary>
+      <div class="settings-body">
+        <div class="settings-block">
+          <h3>Perilaku saat Bluetooth tersambung</h3>
+          <div class="field">
+            <label for="connectModeSelect">Mode koneksi</label>
+            <select class="settings-select" id="connectModeSelect">
+              <option value="ALL_ON">Semua relay langsung ON</option>
+              <option value="RESTORE_LAST">Kembalikan kondisi terakhir</option>
+              <option value="STAY_OFF">Tetap OFF sampai dikontrol manual</option>
+            </select>
+          </div>
+          <p class="settings-help">
+            Saat ESP32 baru menyala, seluruh relay tetap OFF untuk keamanan. Mode di atas baru diterapkan ketika HP tersambung.
+          </p>
+        </div>
+
+        <div class="settings-block">
+          <h3>Auto-OFF ketika Bluetooth terputus</h3>
+          <div class="field">
+            <label for="autoOffSelect">Waktu tunggu</label>
+            <select class="settings-select" id="autoOffSelect">
+              <option value="3">3 detik</option>
+              <option value="5">5 detik</option>
+              <option value="10">10 detik</option>
+              <option value="30">30 detik</option>
+            </select>
+          </div>
+          <button class="save-btn" id="saveDeviceSettingsBtn" disabled>Simpan ke ESP32</button>
+        </div>
+
+        <div class="settings-block">
+          <h3>Nama stopkontak</h3>
+          <div class="field">
+            <label for="nameInput1">Relay 1</label>
+            <input id="nameInput1" maxlength="24" value="Stopkontak 1">
+          </div>
+          <div class="field">
+            <label for="nameInput2">Relay 2</label>
+            <input id="nameInput2" maxlength="24" value="Stopkontak 2">
+          </div>
+          <div class="field">
+            <label for="nameInput3">Relay 3</label>
+            <input id="nameInput3" maxlength="24" value="Stopkontak 3">
+          </div>
+          <div class="field">
+            <label for="nameInput4">Relay 4</label>
+            <input id="nameInput4" maxlength="24" value="Master Power">
+          </div>
+          <button class="save-btn" id="saveNamesBtn">Simpan Nama di HP</button>
+        </div>
+
+        <div class="settings-block">
+          <h3>Keamanan koneksi</h3>
+          <div class="feature-list">
+            <div class="feature-row"><span>Batas pengguna</span><strong>Satu HP</strong></div>
+            <div class="feature-row"><span>Data aplikasi</span><strong>Offline</strong></div>
+            <div class="feature-row"><span>Status awal setelah boot</span><strong>Semua OFF</strong></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="section-title">
+      <h2>Riwayat aktivitas</h2>
+      <span>Lokal</span>
+    </div>
+
+    <section class="history">
+      <div class="history-head">
+        <strong>Aktivitas terbaru</strong>
+        <button class="clear-btn" id="clearHistoryBtn">Hapus riwayat</button>
+      </div>
+      <ul class="history-list" id="historyList"></ul>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const SERVICE_UUID = "5f524c4e-0001-4a5b-9c1e-6f2b1a8d3c00";
+    const STATUS_UUID  = "5f524c4e-0002-4a5b-9c1e-6f2b1a8d3c00";
+    const CONTROL_UUID = "5f524c4e-0003-4a5b-9c1e-6f2b1a8d3c00";
+
+    const DEFAULT_NAMES = ["Stopkontak 1", "Stopkontak 2", "Stopkontak 3", "Master Power"];
+    const MODE_LABELS = {
+      ALL_ON: "semua relay langsung ON",
+      RESTORE_LAST: "kembalikan kondisi terakhir",
+      STAY_OFF: "tetap OFF sampai dikontrol manual"
+    };
+
+    const state = {
+      connected: false,
+      relays: [false, false, false, false],
+      timers: [0, 0, 0, 0],
+      autoOffSec: 3,
+      connectMode: "ALL_ON",
+      singleUser: true,
+      names: loadJson("echoWattNames", DEFAULT_NAMES),
+      history: loadJson("echoWattHistory", [])
+    };
+
+    let device = null;
+    let statusCharacteristic = null;
+    let controlCharacteristic = null;
+    let toastTimer = null;
+    let disconnectUiTimer = null;
+    let disconnectUiInterval = null;
+
+    const $ = (id) => document.getElementById(id);
+    const connectBtn = $("connectBtn");
+    const allOnBtn = $("allOnBtn");
+    const allOffBtn = $("allOffBtn");
+    const toggles = [...document.querySelectorAll(".relay-toggle")];
+    const timerStartButtons = [...document.querySelectorAll(".timer-start")];
+    const timerCancelButtons = [...document.querySelectorAll(".timer-cancel")];
+
+    const hasAndroidBridge = () => Boolean(window.AndroidBLE);
+    const hasWebBluetooth = () => Boolean(navigator.bluetooth);
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : structuredClone(fallback);
+      } catch {
+        return structuredClone(fallback);
+      }
+    }
+
+    function saveJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2300);
+    }
+
+    function addHistory(message) {
+      state.history.unshift({ time: Date.now(), message });
+      state.history = state.history.slice(0, 60);
+      saveJson("echoWattHistory", state.history);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = $("historyList");
+      list.innerHTML = "";
+
+      if (!state.history.length) {
+        const li = document.createElement("li");
+        li.innerHTML = "<time>—</time><span>Belum ada aktivitas.</span>";
+        list.appendChild(li);
+        return;
+      }
+
+      for (const item of state.history) {
+        const li = document.createElement("li");
+        const time = new Date(item.time).toLocaleTimeString("id-ID", {
+          hour: "2-digit", minute: "2-digit", second: "2-digit"
+        });
+        li.innerHTML = `<time>${escapeHtml(time)}</time><span>${escapeHtml(item.message)}</span>`;
+        list.appendChild(li);
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>'"]/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+      })[char]);
+    }
+
+    function setControlsEnabled(enabled) {
+      toggles.forEach(button => button.disabled = !enabled);
+      timerStartButtons.forEach(button => button.disabled = !enabled);
+      timerCancelButtons.forEach(button => button.disabled = !enabled);
+      allOnBtn.disabled = !enabled;
+      allOffBtn.disabled = !enabled;
+      $("saveDeviceSettingsBtn").disabled = !enabled;
+    }
+
+    function setConnected(connected, deviceName = "Echo_Watt") {
+      state.connected = connected;
+      $("statusDot").classList.toggle("connected", connected);
+      $("statusMini").textContent = connected ? "Terhubung" : "Terputus";
+      $("connectionText").textContent = connected ? "Bluetooth terhubung" : "Belum terhubung";
+      $("deviceInfo").textContent = `Perangkat: ${deviceName || "Echo_Watt"}`;
+      connectBtn.textContent = connected ? "Putuskan" : "Hubungkan";
+      setControlsEnabled(connected);
+      renderRelays();
+      renderTimers();
+    }
+
+    function renderNames() {
+      state.names.forEach((name, index) => {
+        const number = index + 1;
+        $(`relayName${number}`).textContent = name;
+        $(`timerName${number}`).textContent = name;
+        $(`nameInput${number}`).value = name;
+      });
+    }
+
+    function renderRelays() {
+      let activeCount = 0;
+
+      state.relays.forEach((isOn, index) => {
+        if (isOn) activeCount++;
+        const relayNumber = index + 1;
+        const card = document.querySelector(`.relay-card[data-relay="${relayNumber}"]`);
+        const button = document.querySelector(`.relay-toggle[data-relay="${relayNumber}"]`);
+        const label = card.querySelector(".relay-state");
+
+        card.classList.toggle("active", isOn);
+        button.classList.toggle("on", isOn);
+        button.setAttribute("aria-pressed", String(isOn));
+        label.textContent = isOn ? "Menyala" : "Mati";
+      });
+
+      $("relaySummary").textContent = `${activeCount} dari 4 aktif`;
+    }
+
+    function formatDuration(totalSeconds) {
+      const seconds = Math.max(0, Number(totalSeconds) || 0);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+
+      if (hours > 0) return `${hours}j ${minutes}m ${remainingSeconds}d`;
+      if (minutes > 0) return `${minutes}m ${remainingSeconds}d`;
+      return `${remainingSeconds} detik`;
+    }
+
+    function renderTimers() {
+      state.timers.forEach((seconds, index) => {
+        const number = index + 1;
+        const status = $(`timerStatus${number}`);
+        status.textContent = seconds > 0
+          ? `Akan mati dalam ${formatDuration(seconds)}`
+          : "Timer tidak aktif";
+      });
+    }
+
+    function renderSettings() {
+      $("autoOffSelect").value = String(state.autoOffSec);
+      $("connectModeSelect").value = state.connectMode;
+      $("safetyNote").textContent =
+        `Mode connect: ${MODE_LABELS[state.connectMode]}. Jika Bluetooth terputus, ` +
+        `ESP32 mematikan semua relay setelah ${state.autoOffSec} detik. Hanya satu HP dapat terhubung.`;
+    }
+
+    async function connect() {
+      if (state.connected) {
+        disconnect();
+        return;
+      }
+
+      if (hasAndroidBridge()) {
+        try {
+          window.AndroidBLE.connect();
+          showToast("Memulai koneksi Bluetooth…");
+        } catch {
+          showToast("Gagal membuka Bluetooth Android.");
+        }
+        return;
+      }
+
+      if (!hasWebBluetooth()) {
+        $("unsupportedNotice").classList.add("show");
+        showToast("Web Bluetooth tidak tersedia.");
+        return;
+      }
+
+      try {
+        showToast("Mencari Echo_Watt…");
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [SERVICE_UUID] }],
+          optionalServices: [SERVICE_UUID]
+        });
+
+        device.addEventListener("gattserverdisconnected", onBrowserDisconnected);
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+
+        statusCharacteristic = await service.getCharacteristic(STATUS_UUID);
+        controlCharacteristic = await service.getCharacteristic(CONTROL_UUID);
+
+        await statusCharacteristic.startNotifications();
+        statusCharacteristic.addEventListener("characteristicvaluechanged", event => {
+          receiveStatus(new TextDecoder().decode(event.target.value));
+        });
+
+        setConnected(true, device.name);
+        addHistory(`Terhubung ke ${device.name || "Echo_Watt"}`);
+        showToast("Bluetooth terhubung.");
+
+        try {
+          const value = await statusCharacteristic.readValue();
+          receiveStatus(new TextDecoder().decode(value));
+        } catch {
+          await sendCommand({ command: "GET_STATUS" });
+        }
+      } catch (error) {
+        if (error?.name !== "NotFoundError") {
+          addHistory(`Koneksi gagal: ${error.message || "Kesalahan tidak diketahui"}`);
+          showToast("Koneksi Bluetooth gagal.");
+        }
+      }
+    }
+
+    function disconnect() {
+      if (hasAndroidBridge()) {
+        try { window.AndroidBLE.disconnect(); } catch {}
+        return;
+      }
+      if (device?.gatt?.connected) device.gatt.disconnect();
+    }
+
+    function onBrowserDisconnected() {
+      device = null;
+      statusCharacteristic = null;
+      controlCharacteristic = null;
+      handleDisconnected();
+    }
+
+    function handleDisconnected() {
+      setConnected(false);
+      state.timers = [0, 0, 0, 0];
+      renderTimers();
+      addHistory(`Bluetooth terputus; auto-OFF ${state.autoOffSec} detik dimulai`);
+      showToast("Bluetooth terputus.");
+
+      clearTimeout(disconnectUiTimer);
+      clearInterval(disconnectUiInterval);
+
+      let remaining = state.autoOffSec;
+      const alert = $("disconnectCountdown");
+      alert.classList.add("show");
+      alert.textContent = `Semua relay akan mati dalam ${remaining} detik.`;
+
+      disconnectUiInterval = setInterval(() => {
+        remaining -= 1;
+        if (remaining > 0) {
+          alert.textContent = `Semua relay akan mati dalam ${remaining} detik.`;
+        }
+      }, 1000);
+
+      disconnectUiTimer = setTimeout(() => {
+        clearInterval(disconnectUiInterval);
+        state.relays = [false, false, false, false];
+        renderRelays();
+        alert.textContent = "Semua relay telah dimatikan oleh ESP32.";
+        setTimeout(() => alert.classList.remove("show"), 2500);
+      }, state.autoOffSec * 1000);
+    }
+
+    async function sendCommand(payload) {
+      if (!state.connected) {
+        showToast("Hubungkan Echo Watt terlebih dahulu.");
+        return false;
+      }
+
+      const json = JSON.stringify(payload);
+
+      try {
+        if (hasAndroidBridge()) {
+          window.AndroidBLE.write(json);
+        } else {
+          if (!controlCharacteristic) throw new Error("Characteristic belum tersedia");
+          const bytes = new TextEncoder().encode(json);
+          await controlCharacteristic.writeValueWithResponse(bytes);
+        }
+        return true;
+      } catch (error) {
+        addHistory(`Perintah gagal: ${error.message || "Kesalahan Bluetooth"}`);
+        showToast("Perintah gagal dikirim.");
+        return false;
+      }
+    }
+
+    async function toggleRelay(relayNumber) {
+      const nextState = !state.relays[relayNumber - 1];
+      if (await sendCommand({ relay: relayNumber, state: nextState })) {
+        state.relays[relayNumber - 1] = nextState;
+        state.timers[relayNumber - 1] = 0;
+        renderRelays();
+        renderTimers();
+        addHistory(`${state.names[relayNumber - 1]} ${nextState ? "dinyalakan" : "dimatikan"}`);
+      }
+    }
+
+    async function setAll(on) {
+      if (await sendCommand({ command: on ? "ALL_ON" : "ALL_OFF" })) {
+        state.relays = [on, on, on, on];
+        state.timers = [0, 0, 0, 0];
+        renderRelays();
+        renderTimers();
+        addHistory(on ? "Semua relay dinyalakan" : "Semua relay dimatikan");
+      }
+    }
+
+    function selectedTimerSeconds(relayNumber) {
+      const preset = $(`timerPreset${relayNumber}`).value;
+      if (preset !== "custom") return Number(preset);
+
+      const minutes = Number($(`timerCustom${relayNumber}`).value);
+      if (!Number.isFinite(minutes) || minutes < 1 || minutes > 1440) return null;
+      return Math.round(minutes * 60);
+    }
+
+    async function startTimer(relayNumber) {
+      const seconds = selectedTimerSeconds(relayNumber);
+      if (!seconds) {
+        showToast("Masukkan waktu 1–1440 menit.");
+        return;
+      }
+
+      if (await sendCommand({ timer: { relay: relayNumber, seconds } })) {
+        state.relays[relayNumber - 1] = true;
+        state.timers[relayNumber - 1] = seconds;
+        renderRelays();
+        renderTimers();
+        addHistory(`${state.names[relayNumber - 1]} akan mati dalam ${formatDuration(seconds)}`);
+        showToast("Countdown dimulai di ESP32.");
+      }
+    }
+
+    async function cancelTimer(relayNumber) {
+      if (await sendCommand({ timer: { relay: relayNumber, seconds: 0 } })) {
+        state.timers[relayNumber - 1] = 0;
+        renderTimers();
+        addHistory(`Countdown ${state.names[relayNumber - 1]} dibatalkan`);
+        showToast("Countdown dibatalkan.");
+      }
+    }
+
+    async function saveDeviceSettings() {
+      const disconnectDelay = Number($("autoOffSelect").value);
+      const connectMode = $("connectModeSelect").value;
+
+      const success = await sendCommand({
+        settings: {
+          disconnect_delay: disconnectDelay,
+          connect_mode: connectMode
+        }
+      });
+
+      if (success) {
+        state.autoOffSec = disconnectDelay;
+        state.connectMode = connectMode;
+        renderSettings();
+        addHistory(`Pengaturan ESP32: auto-OFF ${disconnectDelay} detik, mode ${MODE_LABELS[connectMode]}`);
+        showToast("Pengaturan disimpan di ESP32.");
+      }
+    }
+
+    function receiveStatus(rawPayload) {
+      try {
+        const data = typeof rawPayload === "string" ? JSON.parse(rawPayload) : rawPayload;
+
+        if (Array.isArray(data.r)) {
+          state.relays = data.r.slice(0, 4).map(Boolean);
+        } else {
+          state.relays = [Boolean(data.relay1), Boolean(data.relay2), Boolean(data.relay3), Boolean(data.relay4)];
+        }
+
+        if (Array.isArray(data.t)) {
+          state.timers = data.t.slice(0, 4).map(value => Math.max(0, Number(value) || 0));
+        }
+
+        if (Number.isFinite(Number(data.ad))) state.autoOffSec = Number(data.ad);
+        if (Number.isFinite(Number(data.cm))) {
+          state.connectMode = ["ALL_ON", "RESTORE_LAST", "STAY_OFF"][Number(data.cm)] || "ALL_ON";
+        }
+        if (data.su !== undefined) state.singleUser = Boolean(data.su);
+
+        renderRelays();
+        renderTimers();
+        renderSettings();
+      } catch {
+        console.warn("Status BLE tidak valid:", rawPayload);
+      }
+    }
+
+    connectBtn.addEventListener("click", connect);
+    toggles.forEach(button => {
+      button.addEventListener("click", () => toggleRelay(Number(button.dataset.relay)));
+    });
+    allOnBtn.addEventListener("click", () => setAll(true));
+    allOffBtn.addEventListener("click", () => setAll(false));
+
+    timerStartButtons.forEach(button => {
+      button.addEventListener("click", () => startTimer(Number(button.dataset.relay)));
+    });
+    timerCancelButtons.forEach(button => {
+      button.addEventListener("click", () => cancelTimer(Number(button.dataset.relay)));
+    });
+
+    for (let relayNumber = 1; relayNumber <= 4; relayNumber++) {
+      $(`timerPreset${relayNumber}`).addEventListener("change", event => {
+        $(`timerCustom${relayNumber}`).hidden = event.target.value !== "custom";
+      });
+    }
+
+    $("saveDeviceSettingsBtn").addEventListener("click", saveDeviceSettings);
+
+    $("saveNamesBtn").addEventListener("click", () => {
+      state.names = [1, 2, 3, 4].map((number, index) => {
+        const value = $(`nameInput${number}`).value.trim();
+        return value || DEFAULT_NAMES[index];
+      });
+      saveJson("echoWattNames", state.names);
+      renderNames();
+      addHistory("Nama relay diperbarui");
+      showToast("Nama berhasil disimpan di HP.");
+    });
+
+    $("clearHistoryBtn").addEventListener("click", () => {
+      state.history = [];
+      saveJson("echoWattHistory", state.history);
+      renderHistory();
+      showToast("Riwayat dihapus.");
+    });
+
+    window.EchoWattApp = {
+      onConnected(deviceName = "Echo_Watt") {
+        clearTimeout(disconnectUiTimer);
+        clearInterval(disconnectUiInterval);
+        $("disconnectCountdown").classList.remove("show");
+        setConnected(true, deviceName);
+        addHistory(`Terhubung ke ${deviceName}`);
+        showToast("Bluetooth terhubung.");
+      },
+      onDisconnected() {
+        handleDisconnected();
+      },
+      onStatus(payload) {
+        receiveStatus(payload);
+      },
+      onError(message) {
+        addHistory(`Bluetooth error: ${message}`);
+        showToast(message || "Terjadi kesalahan Bluetooth.");
+      }
+    };
+
+    if (!hasAndroidBridge() && !hasWebBluetooth()) {
+      $("unsupportedNotice").classList.add("show");
+    }
+
+    renderNames();
+    renderRelays();
+    renderTimers();
+    renderSettings();
+    renderHistory();
+    setConnected(false);
+  </script>
+
+  <!-- PWA: registrasi service worker agar app bisa di-install & dibuka offline -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
